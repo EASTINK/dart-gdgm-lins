@@ -32,7 +32,7 @@ class GDGM_JW{
   }
 
   init(String id, String pwd) async{
-    await Set_login(id,pwd);
+    var s = await Set_login(id,pwd);
     status = await login_jw();
     if (status){
       print("OCR识别次数" + _num_verify.toString());
