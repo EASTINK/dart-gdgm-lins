@@ -3,6 +3,7 @@ class GDGM_Constant{
   static final jw_login_sess = 'https://jw.gdgm.cn/Logon.do';
   static final jw_login_seee_query = {'method': 'logon'};
   static final jw_xsxx = "https://jw.gdgm.cn/jsxsd/grxx/xsxx";
+  static final jw_xskb = "https://jw.gdgm.cn/jsxsd/xskb/xskb_list.do";
   static final accesstoken = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&";
   static final ocr = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic";
   static final Map<String,String> verifycode_head ={

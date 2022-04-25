@@ -11,38 +11,56 @@ late List<Cookie> _cookie1;
 late List<Cookie> _cookie2;
 late Response _HOME;
 late List<int> _verifycode2bytes;
-late String _session;
+String _session = "";
 late String _failed_status;
 late Map<String, String> _loginoption;
 late List<dynamic> _stuinfo;
 late String _OCR_AK;
 late String _OCR_SK;
 late String _OCR_token;
-
+late String _id ;
+late String _pwd;
+late List<dynamic> _kb;
 bool status = false;//登录状态
 int _num_verify = 0; //验证码计次器
 String _verifycode = '';
 String _sess = '';
 
 class GDGM_JW{
-  GDGM_JW(String id, String pwd, String AK, String SK){
-   _OCR_AK = AK; _OCR_SK = SK;
-   gdgm_jw = GDGM_S();
-   init(id,pwd);
+
+   GDGM_JW(String id, String pwd, String AK, String SK){
+      _OCR_AK = AK;
+      _OCR_SK = SK;
+      _id = id;
+      _pwd = pwd;
+      gdgm_jw = GDGM_S();
   }
 
-  init(String id, String pwd) async{
-    var s = await Set_login(id,pwd);
-    status = await login_jw();
-    if (status){
-      print("OCR识别次数" + _num_verify.toString());
-      print("当前登入学生信息： \n" + _stuinfo.toString());
-    }else{
-      print("登录尝试失败！");
+  //@lins 4.24,11.50  增加session参数
+ init({String instr = ""}) async{
+    if(instr != ""){
+      _session = instr;
+      _stuinfo = await get_stuinfo(false); //存储登入学生的学籍信息
+      _kb = await get_xskb(false);
+    }else {
+      var s = await Set_login(_id, _pwd);
+      status = await login_jw();
+      if (status) {
+        _stuinfo = await get_stuinfo(true);
+        _kb = await get_xskb(true);
+        print("OCR识别次数" + _num_verify.toString());
+      } else {
+        print("登录尝试失败！");
+      }
     }
   }
 
-
+  set_session(String ses) async{
+     _session = ses;
+  }
+  Future<String> get_session() async{
+     return _session;
+  }
   Future<Response> get_HOME() async{
     Response get = await gdgm_jw.get(GDGM_Constant.jw_verify, GDGM_Constant.verifycode_head,Bytes: true);
     return get;
@@ -165,12 +183,6 @@ class GDGM_JW{
       };
       Response login_302 = await gdgm_jw.get(post.headers['location']![0],login302option);
       _cookie2 = await gdgm_jw.cookieJar.loadForRequest(Uri.parse(post.headers['location']![0]));
-      _loginoption = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': Set_session(_cookie1, _cookie2),
-      };
-      Response xsxx = await gdgm_jw.get(GDGM_Constant.jw_xsxx,_loginoption);
-      _stuinfo = Table2List(xsxx.data)[0][2]; //存储登入学生的学籍信息
     }
     else {
     _failed_status = showMsg(post.data);
@@ -179,6 +191,39 @@ class GDGM_JW{
     }
     return true;
   }
+
+  Future <List<dynamic>> get_stuinfo(bool refresh) async{
+    _loginoption = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Cookie': refresh ? Set_session(_cookie1, _cookie2) : _session,
+    };
+    Response xsxx = await gdgm_jw.get(GDGM_Constant.jw_xsxx,_loginoption);
+    List stuinfo = Table2List(xsxx.data)[0][2]; //存储登入学生的学籍信息
+    //print("当前登入学生信息： \n" + _stuinfo.toString());
+    return stuinfo;
+  }
+ Future <List<dynamic>> get_xskb(bool refresh) async{
+   _loginoption = {
+     'Content-Type': 'application/x-www-form-urlencoded',
+     'Cookie': refresh ? Set_session(_cookie1, _cookie2) : _session, //refresh为真时重新计算cookie，否则按原有值替代
+   };
+   Response xskb = await gdgm_jw.get(GDGM_Constant.jw_xskb,_loginoption);
+   List kb = Table2List(xskb.data)[0]; //存储登入学生的学籍信息
+   List new_kb = [];
+   List tmp;
+   for (int x = 0; x<kb.length; x++){
+     new_kb.add(kb[x]);
+     for(int y = 0; y<kb[x].length; y++){
+       tmp = xskb_Trim(kb[x][y].toString());
+       new_kb[x][y] = tmp;
+     }
+   }
+   /*
+   var ssss =  new_kb[1][3];
+   print(ssss[2]);
+   */
+   return new_kb;
+ }
 
   List<dynamic> Table2List(String data){
     Document ss = parse(data);
@@ -209,4 +254,35 @@ class GDGM_JW{
     }
     return error;
   }
+  List<dynamic> xskb_Trim(String someDigits){
+  var someDigits_s = new RegExp(r"\<div [\s\S]*?\<\/div\>").allMatches(someDigits).map((m) => m.group(0)).toString();
+  //.split('<div')[2];
+  if (someDigits_s == "()"){
+    return [];
+  }else{
+    someDigits_s = someDigits_s.split('<div')[2];
+    var numbers = new RegExp(r'\>([\S]*?)\<');
+    assert(numbers.hasMatch(someDigits_s));
+    var out = [];
+    var tmp = "";
+    //test - ljcode
+    //如果有调课记录，需要做标记分割
+    for(var match in numbers.allMatches(someDigits_s)){
+     //去除无效字符后是否为空
+     if(match.group(0).toString().replaceAll(new RegExp(r'[><, .);&nbspP]'),'') != '')
+     {
+       //是否有调课记录的尾标记 是就重置tmp
+       if(match.group(0).toString().replaceAll(new RegExp(r'[><, .;&nbspP]'), '') == "---------------------"){
+         out.add(tmp); tmp="";
+       }else { //不是就继续记下去
+         tmp  += match.group(0).toString().replaceAll(new RegExp(r'[><.;&]'), '') + " ";
+       }
+     }
+    }
+    //当不存在调课情况时自动添加上
+    if (tmp != ""){out.add(tmp); tmp="";}
+    return out;
+    }
+  }
+
 }

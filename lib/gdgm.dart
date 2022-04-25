@@ -52,9 +52,9 @@ class GDGM_S{
     gdgm_s.options.headers = header;
 
     var result = Bytes?
-    (await  gdgm_s.get(url,options: Options(responseType: ResponseType.bytes)))
+    (await  gdgm_s.get(url,options: Options(responseType: ResponseType.bytes)))//Bytes为true时,gdgm_s.data为List<_Uint8List>
         :
-    (await gdgm_s.get(url)); //Bytes为true时,gdgm_s.data为List<_Uint8List>
+    (await gdgm_s.get(url));
     return result;
   }
 // post封装 date 4.8
