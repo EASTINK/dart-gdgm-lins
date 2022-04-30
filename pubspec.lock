@@ -162,6 +162,13 @@ packages:
       url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
     source: hosted
     version: "4.0.0"
+  icalendar_parser:
+    dependency: "direct main"
+    description:
+      name: icalendar_parser
+      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
+    source: hosted
+    version: "1.0.1+1"
   intl:
     dependency: transitive
     description:
