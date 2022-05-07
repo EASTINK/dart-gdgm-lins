@@ -37,23 +37,23 @@ class GDGM_JW {
   }
 
   //@lins 4.24,11.50  增加session参数
-  init({String instr = ""}) async {
-    var teststr;
+  init() async {
+   /* var teststr;
     if (instr != "") {
       _session = instr;
       _stuinfo = await get_stuinfo(false); //存储登入学生的学籍信息
       _kb = await get_xskb(false); //存储初始格式化后的课表信息
+    } else {*/
+    var s = await Set_login(_id, _pwd);
+    status = await login_jw();
+    if (status) {
+      _stuinfo = await get_stuinfo(true);
+      _kb = await get_xskb(true);
+      print("OCR识别次数" + _num_verify.toString());
     } else {
-      var s = await Set_login(_id, _pwd);
-      status = await login_jw();
-      if (status) {
-        _stuinfo = await get_stuinfo(true);
-        _kb = await get_xskb(true);
-        print("OCR识别次数" + _num_verify.toString());
-      } else {
-        print("登录尝试失败！");
-      }
+      print("登录尝试失败！");
     }
+    //}
   }
 
   set_session(String ses) async {

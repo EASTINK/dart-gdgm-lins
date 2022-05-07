@@ -1,6 +1,8 @@
 import 'package:gdgm_lins/gdgm_Jw.dart';
 import 'package:gdgm_lins/gdgm_msg.dart' as Mail;
 import 'package:gdgm_lins/gdgm_kc.dart';
+import 'package:gdgm_lins/gdgm_umooc.dart';
+
 //test parm @lins:
 void main() async {
   /*GDGM_JW jw =
@@ -25,5 +27,16 @@ void main() async {
     '课表推送', '收信人','上课咯！',  //发信人名称，收信人，邮件标题
      htmlbody: body);   //发信内容
 */
+
+/*GDGM_UC umooc = GDGM_UC("优慕课账户", "优慕课密码");
+  await umooc.login();
+  print(umooc.todo());
+*/
+
+
+
+
+
+
 
 }

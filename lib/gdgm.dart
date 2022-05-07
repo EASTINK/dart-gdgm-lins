@@ -32,11 +32,18 @@ class GDGM_S{
         onError: (DioError e, handler) {
           // 当请求失败时做一些预处理
           dynamic _onError(DioError e) {
+
             if (e.response?.statusCode == 302){
               //to do?
             }
+
             return e;
           }
+
+          if (e.type == DioErrorType.other){
+            print("网络错误或者服务器炸了！");
+          }
+
           return  handler.next(e);
         }
 
