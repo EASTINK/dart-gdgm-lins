@@ -7,6 +7,6 @@
 优慕课作业🆗 、互评、小测解析 正在填坑
 
 A Simple Example:
-![image](https://cdn.jsdelivr.net/gh/luckinkhin/dart-gdgm-lins/print_umooc.jpg.jpg)
+![image](https://cdn.jsdelivr.net/gh/luckinkhin/dart-gdgm-lins/print_umooc.jpg)
 ![image](https://cdn.jsdelivr.net/gh/luckinkhin/dart-gdgm-lins/cap-kbts.jpg)
 ![image](https://cdn.jsdelivr.net/gh/luckinkhin/dart-gdgm-lins/cap-xskb.png)
