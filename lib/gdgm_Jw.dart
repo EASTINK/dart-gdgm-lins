@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'gdgm.dart';
@@ -20,6 +21,7 @@ late String _OCR_token;
 late String _id ;
 late String _pwd;
 late List<dynamic> _kb;
+late List<dynamic> _bzkb;
 bool status = false;//登录状态
 int _num_verify = 0; //验证码计次器
 String _verifycode = '';
@@ -37,24 +39,19 @@ class GDGM_JW {
   }
 
   //@lins 4.24,11.50  增加session参数
-  init() async {
-   /* var teststr;
-    if (instr != "") {
-      _session = instr;
-      _stuinfo = await get_stuinfo(false); //存储登入学生的学籍信息
-      _kb = await get_xskb(false); //存储初始格式化后的课表信息
-    } else {*/
-    var s = await Set_login(_id, _pwd);
-    status = await login_jw();
+  /*
+   Future<int> init() async {
+    //status = await login_jw();
     if (status) {
-      _stuinfo = await get_stuinfo(true);
-      _kb = await get_xskb(true);
-      print("OCR识别次数" + _num_verify.toString());
+
+      print("OCR:" + _num_verify.toString());
+      return 1;
     } else {
-      print("登录尝试失败！");
+      return 0;
     }
     //}
-  }
+  }*/
+
 
   set_session(String ses) async {
     _session = ses;
@@ -158,47 +155,53 @@ class GDGM_JW {
     return _session;
   }
 
-  Future<bool> Set_login(String id, String pwd) async {
+  Future<bool> Set_login() async {
     _OCR_token = await get_AccessToken();
     do {
       _num_verify += 1; // _num_verify + 1;
-      print("尝试自动识别第" + _num_verify.toString() + "次验证码,返回结果：");
+      //print("尝试自动识别第" + _num_verify.toString() + "次验证码,返回结果：");
       _HOME = await get_HOME();
       _verifycode = await Get_verifycode();
       print(_verifycode);
     } while (_verifycode == "failed");
-    _sess = await get_sess(id, pwd);
+    _sess = await get_sess(_id, _pwd);
     return true;
   }
 
   Future<bool> login_jw() async {
-    Response post = await gdgm_jw.post(
-        GDGM_Constant.jw_login_sess,
-        await get_login_header(),
-        data: {
-          "userAccount": '',
-          "userPassword": '', //sess登录不需要填写
-          "RANDOMCODE": _verifycode,
-          "encoded": _sess,
-        },
-        queryPar: GDGM_Constant.jw_login_seee_query
-    );
-    if (post.statusCode == 302) {
-      Map<String, String> login302option = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': await cookie1(),
-      };
-      Response login_302 = await gdgm_jw.get(
-          post.headers['location']![0], login302option);
-      _cookie2 = await gdgm_jw.cookieJar.loadForRequest(
-          Uri.parse(post.headers['location']![0]));
-    }
-    else {
-      _failed_status = showMsg(post.data);
-      print(_failed_status);
-      return false;
-    }
-    return true;
+    var ocr = await Set_login();
+    if(ocr) {
+      Response post = await gdgm_jw.post(
+          GDGM_Constant.jw_login_sess,
+          await get_login_header(),
+          data: {
+            "userAccount": '',
+            "userPassword": '', //sess登录不需要填写
+            "RANDOMCODE": _verifycode,
+            "encoded": _sess,
+          },
+          queryPar: GDGM_Constant.jw_login_seee_query
+      );
+      if (post.statusCode == 302) {
+        Map<String, String> login302option = {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Cookie': await cookie1(),
+        };
+        Response login_302 = await gdgm_jw.get(
+            post.headers['location']![0], login302option);
+        _cookie2 = await gdgm_jw.cookieJar.loadForRequest(
+            Uri.parse(post.headers['location']![0]));
+        _stuinfo = await get_stuinfo(true);
+        _kb = await get_xskb(true);
+        _bzkb = await get_bzkb(RegExp(r"(\r\n|\n|.)*\ ").stringMatch(DateTime.now().toString()).toString().replaceAll(" ", ""));
+        return true;
+      }
+      else {
+        _failed_status = showMsg(post.data);
+        print(_failed_status);
+        return false;
+      }
+    }else{return false;}
   }
 
   Future <List<dynamic>> get_stuinfo(bool refresh) async {
@@ -231,6 +234,35 @@ class GDGM_JW {
     }
     return new_kb;
   }
+
+
+  Future <List<dynamic>> get_bzkb(String date) async {
+    _loginoption = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Cookie': _session,
+      //refresh为真时重新计算cookie，否则按原有值替代
+    };
+    Response xskb = await gdgm_jw.get(GDGM_Constant.jw_bzkb + '?rq=' + date, _loginoption);
+    List kb = Table2List(xskb.data)[0]; //存储登入学生的课表信息
+    List new_kb = [];
+    List tmp_kb = [];
+    String tmp;
+    for (int x = 0; x < kb.length; x++) {
+      //new_kb.add(kb[x]);
+      tmp_kb = [];
+      for (int y = 0; y < kb[x].length; y++) {
+        tmp = bzkb_Trim(kb[x][y].toString());
+        // 由于它的表格是横向读的.... 只能留空位出来了
+        //if(tmp != "null.null.null,"){
+        if(tmp == "null null null"){tmp = "";}
+        tmp_kb.add(tmp);
+        //}
+      }
+      new_kb.add(tmp_kb);
+    }
+    return new_kb;
+  }
+
   //解析table标签
   List<dynamic> Table2List(String data) {
     Document ss = parse(data);
@@ -301,11 +333,24 @@ class GDGM_JW {
       return out;
     }
   }
+
+  String bzkb_Trim(String someDigits) {
+//    var csname = new//(?<=课程名称：)(.*?)(?=<br)
+    String s = someDigits;
+    var name = new RegExp(r'(?<=课程名称：)(.*?)(?=<br)').stringMatch(s).toString() + " ";
+    var time = new RegExp(r'(?<=上课时间：)(.*?)(?=<br/>)').stringMatch(s).toString() + " ";
+    var place = new RegExp(r'(?<=上课地点：)(.*?)(?=\")').stringMatch(s).toString();
+    return name + time + place;
+  }
+
   List stuinfo() {
     return _stuinfo;
   }
   List kb(){
     return _kb;
+  }
+  List bzkb(){
+    return _bzkb;
   }
 
 }

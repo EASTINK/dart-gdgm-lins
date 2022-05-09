@@ -41,7 +41,7 @@ class GDGM_S{
           }
 
           if (e.type == DioErrorType.other){
-            print("网络错误或者服务器炸了！");
+            print(e.message);
           }
 
           return  handler.next(e);

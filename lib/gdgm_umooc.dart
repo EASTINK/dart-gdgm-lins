@@ -17,7 +17,7 @@ class GDGM_UC {
     gdgm_umooc = GDGM_S();
   }
 
-  login() async {
+  Future<bool> login() async {
     Response post = await gdgm_umooc.post(
         GDGM_Constant.umooc_login,
         GDGM_Constant.jw_login_header,
@@ -35,8 +35,8 @@ class GDGM_UC {
             GDGM_Constant.umooc + post.headers['location']![0], login302option);
         _cookie = "JSESSIONID=" + json.decode(login_302.data.toString())["sessionid"] + ";";
         await _worktodo(); //get-workTodo
-    }
-
+        return true;
+    }else{return false;}
   }
 
   _worktodo() async {
@@ -56,7 +56,7 @@ class GDGM_UC {
   }
 
 
-  Map<int, String> _todo(){
+  Map<String, String> _todo(){
     //String str = "";
     List<String> work_time = [];
     Map<dynamic,dynamic> now ;
@@ -67,12 +67,12 @@ class GDGM_UC {
     }
     work_time.sort((a,b) => a.compareTo(b));
     //按照datetime顺序放入map
-    Map<int,String> work_now = Map();
+    Map<String,String> work_now = Map();
     int x = 0;
     for (int i = 0; i < work_time.length; i++) {
       x = int.parse(work_time[i].split(' ')[2]);
       now = _tdlist[x];
-      work_now[i] = now['courseName'] + ":   " + now["title"] + "    截止时间:    " + now["deadline"] + '\n';
+      work_now[i.toString()] = now['courseName'] + ":   " + now["title"] + "    截止时间:    " + now["deadline"] + '\n';
     }
     return work_now;
   }
@@ -92,11 +92,16 @@ class GDGM_UC {
 
   String todo(){
     String str = "";
-    Map<int, String> work_now = _todo();
+    Map<String, String> work_now = _todo();
     for (int i = 0; i < _tdlist.length; i++) {
-      str+= work_now[i]!;
+      str+= work_now[i.toString()]!;
     }
     return str;
+  }
+
+  Map<String,String> map_todo(){
+    Map<String, String> work_now = _todo();
+    return work_now;
   }
 
   List<dynamic> todolist(){

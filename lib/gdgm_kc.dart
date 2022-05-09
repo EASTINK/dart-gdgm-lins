@@ -1,6 +1,7 @@
 //根据给定字符串或JSON解析其中的周数与课程
 import 'dart:io';
 import 'dart:convert';
+
 class GDGM_KC{
 
   late List<dynamic> _kb;
@@ -22,11 +23,19 @@ class GDGM_KC{
   {
     List<String> sec = [];
     for(int i = 1; i <= 6; i++){
-      sec.add(this.kc_day(i, ord, week));
+      sec.add(kc_day(i, ord, week));
     }
     return sec;
   }
 
+  List<String> bzkc_week(int ord) //星期几 第几周
+  {
+    List<String> sec = [];
+    for(int i = 1; i <= 6; i++){
+      sec.add(bzkc_day(i, ord));
+    }
+    return sec;
+  }
   String kc_day(int sec,int ord, int week) { //第几大节, 星期几，第几周
     List day = _kb[sec][ord];
     List now ;
@@ -56,17 +65,24 @@ class GDGM_KC{
        */
       //判断所属周
       for (var value in now_week) {
+        if (value != ""){
         now_sec = value.split('-');
-        for (int i = int.parse(now_sec[0]); i <int.parse(now_sec[now_sec.length - 1]); i++) {
+        for (int i = int.parse(now_sec[0]); i <= int.parse(now_sec[now_sec.length - 1]); i++) {
           if(i == week){
             now_str += now[0] + now[1] + now[2] + now[3];
             break;
           }
-        }
+        }}
       }
     }
     if (now_str == "") {now_str = "第" + sec.toString() + "大节没有课哦！";}
     return now_str;
+  }
+
+  String bzkc_day(int sec,int ord) { //第几大节, 星期几
+    String day = _kb[sec][ord];
+    if(day == ""){day = "第" + sec.toString() + "大节没有课哦！";}
+    return day;
   }
 
   String kc_mail(List<String> body){
@@ -86,6 +102,7 @@ class GDGM_KC{
   String kc_json(){
     return json.encode(_kb);
   }
+
   void kc_Json2file(String route){
     try{
       String str = kc_json();
@@ -93,6 +110,7 @@ class GDGM_KC{
       s.writeAsStringSync(str,mode:FileMode.write,flush: true);
     } catch(e){}
   }
+
 
 
 
