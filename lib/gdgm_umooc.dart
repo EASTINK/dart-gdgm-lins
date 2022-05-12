@@ -108,4 +108,9 @@ class GDGM_UC {
     return _tdlist;
   }
 
+  Future<String> get_session() async {
+    return _cookie;
+  }
+
+
 }

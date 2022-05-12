@@ -1,26 +1,29 @@
 {
     "name": "gdgm-lins",
     "comment":"@lins 5-9,Api-config ",
+    "port":"8080",
     "jw": {
         "enabled": false,
         "jw_user": "",
         "jw_pwd": "",
         "ocr_AK": "",
-        "ocr_SK": ""
+        "ocr_SK": "",
+        "jw-sec" : ""
     },
     "umooc": {
-        "enabled": false,
-        "umooc_user": "",
-        "umooc_pwd": ""
+        "enabled": true,
+        "umooc_user":"",
+        "umooc_pwd":"",
+        "uc-sec" : ""
     },
     "msg": {
-        "model": "mail",
-        "mail": {
-            "host": "smtp.exmail.qq.com",
-            "port": 25,
-            "uid": "",
-            "pwd": "",
-            "ciphost": ""
+        "model":"mail",
+        "mail":{
+            "host":"smtp.exmail.qq.com",
+            "port":25,
+            "uid":"",
+            "pwd":"",
+            "ciphost":""
         }
     }
 }
